@@ -3,24 +3,24 @@ import Axios from "axios";
 import EntriesMap from "./EntriesMap";
 
 const reduceLoad = (loading, action) => {
-  switch(action) {
-    case "LOADING":
-      loading = "LOADING";
-      return;
+  switch (action) {
+    case "LOADING": ;
+      return "LOADING";
     case "LOADED":
       return null;
     default:
       return null;
   }
-}
+};
 
 function App() {
   const [get, setGet] = useState([]);
   const [recent, setRecent] = useState(false);
-  const [filtered, setFiltered] = useState(false)
-  const [failedReq, setFailedReq] = useState(false)
+  const [filtered, setFiltered] = useState(false);
+  const [failedReq, setFailedReq] = useState(false);
+  const [requesting, setRequesting] = useState(true)
 
-  const [loading, dispatch] = useReducer(reduceLoad, "LOADING")
+  const [loading, dispatch] = useReducer(reduceLoad, "LOADING");
 
   const [lowBound, setLowBound] = useState();
   const [highBound, setHighBound] = useState();
@@ -37,42 +37,63 @@ function App() {
   useEffect(() => {
     Axios.get("http://localhost:3001/sessions")
       .then((res) => {
-        setGet(res.data)
-        dispatch("LOADED")
+        setGet(res.data);
+        dispatch("LOADED");
+        setRequesting(false);
       })
-      .catch((err) => {console.log(err); setFailedReq(true); dispatch("LOADED")});
+      .catch((err) => {
+        console.log(err);
+        setFailedReq(true);
+        dispatch("LOADED");
+        setRequesting(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    const htmlEl = document.querySelector("html");
+    if (localStorage.getItem("--bg")) {
+      htmlEl.style.setProperty("--bg", localStorage.getItem("--bg"));
+      htmlEl.style.setProperty("--b", localStorage.getItem("--b"));
+      htmlEl.style.setProperty("--f", localStorage.getItem("--f"));
+    }
   }, []);
 
   const refreshDB = () => {
+    setRequesting(true)
     if (recent && !filtered) {
       Axios.get("http://localhost:3001/sessions/recent")
         .then((res) => {
           setGet(res.data);
+          setRequesting(false)
         })
-        .catch((err) => console.log(err));
+        .catch((err) => {console.log(err); setFailedReq(true)});
     } else if (!recent && !filtered) {
       Axios.get("http://localhost:3001/sessions")
         .then((res) => {
           setGet(res.data);
+          setRequesting(false)
         })
-        .catch((err) => console.log(err));
+        .catch((err) => {console.log(err); setFailedReq(true)});
     } else if (filtered) {
-        if (!recent) {
-          Axios.get(`http://localhost:3001/sessions/filter/"${lowBound}"/"${highBound}"`)
+      if (!recent) {
+        Axios.get(
+          `http://localhost:3001/sessions/filter/"${lowBound}"/"${highBound}"`
+        )
           .then((res) => {
-            console.log(res)
             setGet(res.data);
+            setRequesting(false)
           })
-          .catch((err) => console.log(err));
-        }
-        else if (recent) {
-          Axios.get(`http://localhost:3001/sessions/filter/recent/"${lowBound}"/"${highBound}"`)
+          .catch((err) => {console.log(err); setFailedReq(true)});
+      } else if (recent) {
+        Axios.get(
+          `http://localhost:3001/sessions/filter/recent/"${lowBound}"/"${highBound}"`
+        )
           .then((res) => {
-            console.log(res)
             setGet(res.data);
+            setRequesting(false)
           })
-          .catch((err) => console.log(err));
-        }
+          .catch((err) => {console.log(err); setFailedReq(true)});
+      }
     }
   };
 
@@ -80,6 +101,7 @@ function App() {
 
   const addEntry = (e) => {
     e.preventDefault();
+    setRequesting(true)
     Axios.post("http://localhost:3001/sessions", {
       date,
       alias,
@@ -93,6 +115,7 @@ function App() {
       .then((res) => {
         console.log("Posting entry", res);
         setMessage(res.data);
+        setRequesting(false)
       })
       .then(() => refreshDB())
       .catch((err) => console.log(err));
@@ -106,158 +129,216 @@ function App() {
   };
 
   const getRecent = () => {
+    setRequesting(true)
     if (!recent && !filtered) {
       Axios.get("http://localhost:3001/sessions/recent")
         .then((res) => {
           setGet(res.data);
+          setRequesting(false)
         })
         .then(() => setRecent(true))
-        .catch((err) => console.log(err));
+        .catch((err) => {console.log(err); setFailedReq(true)});
     } else if (recent && !filtered) {
       Axios.get("http://localhost:3001/sessions")
         .then((res) => {
           setGet(res.data);
+          setRequesting(false)
         })
         .then(() => setRecent(false))
-        .catch((err) => console.log(err));
+        .catch((err) => {console.log(err); setFailedReq(true)});
     } else if (filtered) {
-        if (recent) {
-          Axios.get(`http://localhost:3001/sessions/filter/"${lowBound}"/"${highBound}"`)
+      if (recent) {
+        Axios.get(
+          `http://localhost:3001/sessions/filter/"${lowBound}"/"${highBound}"`
+        )
           .then((res) => {
-            console.log(res)
+            setRequesting(false)
             setGet(res.data);
           })
           .then(() => setRecent(false))
-          .catch((err) => console.log(err));
-        }
-        else if (!recent) {
-          Axios.get(`http://localhost:3001/sessions/filter/recent/"${lowBound}"/"${highBound}"`)
+          .catch((err) => {console.log(err); setFailedReq(true)});
+      } else if (!recent) {
+        Axios.get(
+          `http://localhost:3001/sessions/filter/recent/"${lowBound}"/"${highBound}"`
+        )
           .then((res) => {
-            console.log(res)
+            setRequesting(false)
             setGet(res.data);
           })
           .then(() => setRecent(true))
-          .catch((err) => console.log(err));
-        }
+          .catch((err) => {console.log(err); setFailedReq(true)});
+      }
     }
   };
 
   const filterS = (e) => {
     if (e) e.preventDefault();
+    if (!lowBound || !highBound) {
+      document.getElementById("filterContainer").firstChild.focus();
+      return;
+    }
+    setRequesting(true)
     if (!recent) {
-      Axios.get(`http://localhost:3001/sessions/filter/"${lowBound}"/"${highBound}"`)
-      .then((res) => {
-        console.log(res)
-        setGet(res.data);
-        setFiltered(true);
-      })
-      .catch((err) => console.log(err));
+      Axios.get(
+        `http://localhost:3001/sessions/filter/"${lowBound}"/"${highBound}"`
+      )
+        .then((res) => {
+          console.log(res);
+          setGet(res.data);
+          setFiltered(true);
+          setRequesting(false)
+        })
+        .catch((err) => {console.log(err); setFailedReq(true)});
+    } else if (recent) {
+      Axios.get(
+        `http://localhost:3001/sessions/filter/recent/"${lowBound}"/"${highBound}"`
+      )
+        .then((res) => {
+          console.log(res);
+          setGet(res.data);
+          setFiltered(true);
+          setRequesting(false)
+        })
+        .catch((err) => {console.log(err); setFailedReq(true)});
     }
-    else if (recent) {
-      Axios.get(`http://localhost:3001/sessions/filter/recent/"${lowBound}"/"${highBound}"`)
-      .then((res) => {
-        console.log(res)
-        setGet(res.data);
-        setFiltered(true);
-      })
-      .catch((err) => console.log(err));
-    }
-  }
+  };
 
   const toggleFilter = (e) => {
     e.preventDefault();
     if (filtered) {
       if (!recent) {
         Axios.get(`http://localhost:3001/sessions/`)
-        .then((res) => {
-          console.log(res)
-          setGet(res.data);
-          setFiltered(false);
-        })
-        .catch((err) => console.log(err));
-      }
-      else if (recent) {
+          .then((res) => {
+            console.log(res);
+            setGet(res.data);
+            setFiltered(false);
+          })
+          .catch((err) => {console.log(err); setFailedReq(true)});
+      } else if (recent) {
         Axios.get(`http://localhost:3001/sessions/recent/`)
-        .then((res) => {
-          console.log(res)
-          setGet(res.data);
-          setFiltered(false);
-        })
-        .catch((err) => console.log(err));
+          .then((res) => {
+            console.log(res);
+            setGet(res.data);
+            setFiltered(false);
+          })
+          .catch((err) => {console.log(err); setFailedReq(true)});
       }
-    };
-  }
+    }
+  };
 
   const themeChange = (e) => {
     const theme = e.target.value;
     const el = document.querySelector("html");
-    switch(theme) {
+    switch (theme) {
       case "light":
-        el.style.setProperty('--bg', 'darkgrey');
-        el.style.setProperty('--b', 'white');
-        el.style.setProperty('--f', 'black');
+        el.style.setProperty("--bg", "darkgrey");
+        el.style.setProperty("--b", "white");
+        el.style.setProperty("--f", "black");
+        localStorage.setItem("--bg", "darkgrey");
+        localStorage.setItem("--b", "white");
+        localStorage.setItem("--f", "black");
         return;
       case "dark":
-        el.style.setProperty('--bg', 'darkgrey');
-        el.style.setProperty('--b', 'black');
-        el.style.setProperty('--f', 'grey');
+        el.style.setProperty("--bg", "darkgrey");
+        el.style.setProperty("--b", "black");
+        el.style.setProperty("--f", "grey");
+        localStorage.setItem("--bg", "darkgrey");
+        localStorage.setItem("--b", "black");
+        localStorage.setItem("--f", "grey");
         return;
       case "blue":
-        el.style.setProperty('--bg', 'lightblue');
-        el.style.setProperty('--b', 'lightcyan');
-        el.style.setProperty('--f', 'black');
+        el.style.setProperty("--bg", "lightblue");
+        el.style.setProperty("--b", "lightcyan");
+        el.style.setProperty("--f", "black");
+        localStorage.setItem("--bg", "lightblue");
+        localStorage.setItem("--b", "lightcyan");
+        localStorage.setItem("--f", "black");
         return;
       case "green":
-        el.style.setProperty('--bg', 'green');
-        el.style.setProperty('--b', 'lightgreen');
-        el.style.setProperty('--f', 'black');
+        el.style.setProperty("--bg", "green");
+        el.style.setProperty("--b", "lightgreen");
+        el.style.setProperty("--f", "black");
+        localStorage.setItem("--bg", "green");
+        localStorage.setItem("--b", "lightgreen");
+        localStorage.setItem("--f", "black");
         return;
       case "red":
-        el.style.setProperty('--bg', 'darkred');
-        el.style.setProperty('--b', 'lightcoral');
-        el.style.setProperty('--f', 'black');
+        el.style.setProperty("--bg", "darkred");
+        el.style.setProperty("--b", "lightcoral");
+        el.style.setProperty("--f", "black");
+        localStorage.setItem("--bg", "darkred");
+        localStorage.setItem("--b", "lightcoral");
+        localStorage.setItem("--f", "black");
         return;
-      default: 
-       return;
+      default:
+        return;
     }
-  }
+  };
 
   return (
     <div id="mainContainer">
       <div id="titleContainer">
-        <h1>My Lifting Record</h1>
-        {!loading && !failedReq 
-        ? <div id="reverseContainer">
-          <div id="theme">
-            <label htmlFor="themer">Theme:</label>
-            <select id="themer" onChange={(e)=>themeChange(e)}>
-              <option value="">--Choose a Theme--</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-              <option value="blue">Blue</option>
-              <option value="green">Green</option>
-              <option value="red">Red</option>
-            </select>
+        {requesting ? <h1>My Lifting Record<div id="loading"></div></h1> : <h1>My Lifting Record</h1>}
+        {!loading && !failedReq ? (
+          <div id="reverseContainer">
+            <div id="theme">
+              <label htmlFor="themer">Theme:</label>
+              <select id="themer" onChange={(e) => themeChange(e)}>
+                <option value="">{ window.innerWidth < 700 ? '--Theme--' : '--Choose a Theme--'}</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+                <option value="red">Red</option>
+              </select>
+            </div>
+            <div id="rc2">
+              <p>Filter:</p>
+            </div>
+            <button onClick={getRecent}>
+              {recent
+                ? `Order by oldest session`
+                : `Order by most recent session`}
+            </button>
           </div>
-          <div id="rc2"><p>Filter:</p></div>
-          <button onClick={getRecent} >{recent ? `Order by oldest session` : `Order by most recent session`}</button>
-          </div>
-        : null }
-        {!loading && !failedReq 
-        ? <form id="filterContainer">
+        ) : null}
+        {!loading && !failedReq ? (
+          <form id="filterContainer">
             <label htmlFor="lowerBound">Date from:</label>
-            <input id="lowerBound" type="date" onChange={(e)=>setLowBound(e.target.value)}/>
+            <input
+              id="lowerBound"
+              type="date"
+              onChange={(e) => setLowBound(e.target.value)}
+            />
             <label htmlFor="upperBound">Date to:</label>
-            <input id="upperBound" type="date" onChange={(e)=>setHighBound(e.target.value)}/>
-            <button onClick={(e)=>filterS(e)}>Filter by Date</button>
-            {filtered ? <button onClick={(e)=>toggleFilter(e)}>Turn off filter</button> : null}
+            <input
+              id="upperBound"
+              type="date"
+              onChange={(e) => setHighBound(e.target.value)}
+            />
+            <button onClick={(e) => filterS(e)}>Filter by Date</button>
+            {filtered ? (
+              <button onClick={(e) => toggleFilter(e)}>Turn off filter</button>
+            ) : null}
           </form>
-        : null }
+        ) : null}
       </div>
-      {loading ? <div>LOADING...</div> : null}
       {failedReq ? <div>GET request failed</div> : null}
-      <EntriesMap get={get} setGet={setGet} recent={recent} lowBound={lowBound} highBound={highBound} filtered={filtered} />
-      <button onClick={handleToggle}>Add an Entry</button>
+      {!loading && !failedReq ? (
+      <EntriesMap
+        get={get}
+        setGet={setGet}
+        recent={recent}
+        lowBound={lowBound}
+        highBound={highBound}
+        filtered={filtered}
+        requesting={requesting}
+        setRequesting={setRequesting}
+      />
+      ) : null}
+      {!loading && !failedReq ? (
+        <button onClick={handleToggle}>Add an Entry</button>
+      ) : null}
       <form
         id="addSession"
         style={{ display: "none" }}

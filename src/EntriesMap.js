@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Axios from "axios";
 
-function EntriesMap({ get, setGet, recent, lowBound, highBound, filtered }) {
+function EntriesMap({ get, setGet, recent, lowBound, highBound, filtered, requesting, setRequesting }) {
   const [date, setDate] = useState();
   const [alias, setAlias] = useState();
   const [horizontalPress, setHorizontalPress] = useState();
@@ -12,40 +12,44 @@ function EntriesMap({ get, setGet, recent, lowBound, highBound, filtered }) {
   const [hipHinge, setHipHinge] = useState();
 
   const refreshDB = () => {
+    setRequesting(true)
     if (recent && !filtered) {
       Axios.get("http://localhost:3001/sessions/recent")
         .then((res) => {
           setGet(res.data);
+          setRequesting(false)
         })
-        .catch((err) => console.log(err));
+        .catch((err) => {console.log(err); alert("Get request failed")});
     } else if (!recent && !filtered) {
       Axios.get("http://localhost:3001/sessions")
         .then((res) => {
           setGet(res.data);
+          setRequesting(false)
         })
-        .catch((err) => console.log(err));
+        .catch((err) => {console.log(err); alert("Get request failed")});
     } else if (filtered) {
         if (!recent) {
           Axios.get(`http://localhost:3001/sessions/filter/"${lowBound}"/"${highBound}"`)
           .then((res) => {
-            console.log(res)
             setGet(res.data);
+            setRequesting(false)
           })
-          .catch((err) => console.log(err));
+          .catch((err) => {console.log(err); alert("Get request failed")});
         }
         else if (recent) {
           Axios.get(`http://localhost:3001/sessions/filter/recent/"${lowBound}"/"${highBound}"`)
           .then((res) => {
-            console.log(res)
             setGet(res.data);
+            setRequesting(false)
           })
-          .catch((err) => console.log(err));
+          .catch((err) => {console.log(err); alert("Get request failed")});
         }
     }
   };
 
   const editEntry = (e, sessionNumber) => {
     e.preventDefault();
+    setRequesting(true)
     Axios.put(`http://localhost:3001/sessions/${sessionNumber}`, {
       date,
       alias,
@@ -56,17 +60,20 @@ function EntriesMap({ get, setGet, recent, lowBound, highBound, filtered }) {
       knee_flexion: kneeFlexion,
       hip_hinge: hipHinge,
     })
-      .then((res) => console.log("Updating data", res))
+      .then(() => {console.log("Updating data"); setRequesting(false)})
       .then(()=>refreshDB())
-      .catch((err) => console.log(err));
+      .catch((err) => {console.log(err); alert("Put request failed")});
   };
 
   const deleteEntry = (sessionNumber) => {
-    alert("You are about to delete this entry. Are you sure?")
-    Axios.delete(`http://localhost:3001/sessions/${sessionNumber}`)
-    .then((res)=> console.log("Deleting Entry", res))
-    .then(()=>refreshDB())
-    .catch((err)=> console.log(err))
+
+    if(window.confirm("You are about to delete this entry. Are you sure?")){
+      setRequesting(true)
+      Axios.delete(`http://localhost:3001/sessions/${sessionNumber}`)
+      .then((res)=> {console.log("Deleting Entry"); setRequesting(false)})
+      .then(()=>refreshDB())
+      .catch((err)=> {console.log(err); alert("Delete request failed")})
+    }
   };
 
   const handleToggle = (entry) => {
@@ -80,7 +87,6 @@ function EntriesMap({ get, setGet, recent, lowBound, highBound, filtered }) {
     setElbowFlexion(entry.elbow_flexion ? entry.elbow_flexion : null)
     setKneeFlexion(entry.knee_flexion ? entry.knee_flexion : null)
     setHipHinge(entry.hip_hinge ? entry.hip_hinge : null)
-    console.log(`change`)
   }
 
   const newDate = (date) => {
