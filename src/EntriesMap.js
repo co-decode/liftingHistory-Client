@@ -14,14 +14,14 @@ function EntriesMap({ get, setGet, recent, lowBound, highBound, filtered, reques
   const refreshDB = () => {
     setRequesting(true)
     if (recent && !filtered) {
-      Axios.get("http://localhost:3001/sessions/recent")
+      Axios.get("https://node-lifting-history.herokuapp.com/sessions/recent")
         .then((res) => {
           setGet(res.data);
           setRequesting(false)
         })
         .catch((err) => {console.log(err); alert("Get request failed")});
     } else if (!recent && !filtered) {
-      Axios.get("http://localhost:3001/sessions")
+      Axios.get("https://node-lifting-history.herokuapp.com/sessions")
         .then((res) => {
           setGet(res.data);
           setRequesting(false)
@@ -29,7 +29,7 @@ function EntriesMap({ get, setGet, recent, lowBound, highBound, filtered, reques
         .catch((err) => {console.log(err); alert("Get request failed")});
     } else if (filtered) {
         if (!recent) {
-          Axios.get(`http://localhost:3001/sessions/filter/"${lowBound}"/"${highBound}"`)
+          Axios.get(`https://node-lifting-history.herokuapp.com/sessions/filter/"${lowBound}"/"${highBound}"`)
           .then((res) => {
             setGet(res.data);
             setRequesting(false)
@@ -37,7 +37,7 @@ function EntriesMap({ get, setGet, recent, lowBound, highBound, filtered, reques
           .catch((err) => {console.log(err); alert("Get request failed")});
         }
         else if (recent) {
-          Axios.get(`http://localhost:3001/sessions/filter/recent/"${lowBound}"/"${highBound}"`)
+          Axios.get(`https://node-lifting-history.herokuapp.com/sessions/filter/recent/"${lowBound}"/"${highBound}"`)
           .then((res) => {
             setGet(res.data);
             setRequesting(false)
@@ -50,7 +50,7 @@ function EntriesMap({ get, setGet, recent, lowBound, highBound, filtered, reques
   const editEntry = (e, sessionNumber) => {
     e.preventDefault();
     setRequesting(true)
-    Axios.put(`http://localhost:3001/sessions/${sessionNumber}`, {
+    Axios.put(`https://node-lifting-history.herokuapp.com/sessions/${sessionNumber}`, {
       date,
       alias,
       horizontal_press: horizontalPress,
@@ -69,7 +69,7 @@ function EntriesMap({ get, setGet, recent, lowBound, highBound, filtered, reques
 
     if(window.confirm("You are about to delete this entry. Are you sure?")){
       setRequesting(true)
-      Axios.delete(`http://localhost:3001/sessions/${sessionNumber}`)
+      Axios.delete(`https://node-lifting-history.herokuapp.com/sessions/${sessionNumber}`)
       .then((res)=> {console.log("Deleting Entry"); setRequesting(false)})
       .then(()=>refreshDB())
       .catch((err)=> {console.log(err); alert("Delete request failed")})

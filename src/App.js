@@ -35,7 +35,7 @@ function App() {
   const [hipHinge, setHipHinge] = useState(null);
 
   useEffect(() => {
-    Axios.get("http://localhost:3001/sessions")
+    Axios.get("https://node-lifting-history.herokuapp.com/sessions")
       .then((res) => {
         setGet(res.data);
         dispatch("LOADED");
@@ -61,14 +61,14 @@ function App() {
   const refreshDB = () => {
     setRequesting(true)
     if (recent && !filtered) {
-      Axios.get("http://localhost:3001/sessions/recent")
+      Axios.get("https://node-lifting-history.herokuapp.com/sessions/recent")
         .then((res) => {
           setGet(res.data);
           setRequesting(false)
         })
         .catch((err) => {console.log(err); setFailedReq(true)});
     } else if (!recent && !filtered) {
-      Axios.get("http://localhost:3001/sessions")
+      Axios.get("https://node-lifting-history.herokuapp.com/sessions")
         .then((res) => {
           setGet(res.data);
           setRequesting(false)
@@ -77,7 +77,7 @@ function App() {
     } else if (filtered) {
       if (!recent) {
         Axios.get(
-          `http://localhost:3001/sessions/filter/"${lowBound}"/"${highBound}"`
+          `https://node-lifting-history.herokuapp.com/sessions/filter/"${lowBound}"/"${highBound}"`
         )
           .then((res) => {
             setGet(res.data);
@@ -86,7 +86,7 @@ function App() {
           .catch((err) => {console.log(err); setFailedReq(true)});
       } else if (recent) {
         Axios.get(
-          `http://localhost:3001/sessions/filter/recent/"${lowBound}"/"${highBound}"`
+          `https://node-lifting-history.herokuapp.com/sessions/filter/recent/"${lowBound}"/"${highBound}"`
         )
           .then((res) => {
             setGet(res.data);
@@ -102,7 +102,7 @@ function App() {
   const addEntry = (e) => {
     e.preventDefault();
     setRequesting(true)
-    Axios.post("http://localhost:3001/sessions", {
+    Axios.post("https://node-lifting-history.herokuapp.com/sessions", {
       date,
       alias,
       horizontal_press: horizontalPress,
@@ -131,7 +131,7 @@ function App() {
   const getRecent = () => {
     setRequesting(true)
     if (!recent && !filtered) {
-      Axios.get("http://localhost:3001/sessions/recent")
+      Axios.get("https://node-lifting-history.herokuapp.com/sessions/recent")
         .then((res) => {
           setGet(res.data);
           setRequesting(false)
@@ -139,7 +139,7 @@ function App() {
         .then(() => setRecent(true))
         .catch((err) => {console.log(err); setFailedReq(true)});
     } else if (recent && !filtered) {
-      Axios.get("http://localhost:3001/sessions")
+      Axios.get("https://node-lifting-history.herokuapp.com/sessions")
         .then((res) => {
           setGet(res.data);
           setRequesting(false)
@@ -149,7 +149,7 @@ function App() {
     } else if (filtered) {
       if (recent) {
         Axios.get(
-          `http://localhost:3001/sessions/filter/"${lowBound}"/"${highBound}"`
+          `https://node-lifting-history.herokuapp.com/sessions/filter/"${lowBound}"/"${highBound}"`
         )
           .then((res) => {
             setRequesting(false)
@@ -159,7 +159,7 @@ function App() {
           .catch((err) => {console.log(err); setFailedReq(true)});
       } else if (!recent) {
         Axios.get(
-          `http://localhost:3001/sessions/filter/recent/"${lowBound}"/"${highBound}"`
+          `https://node-lifting-history.herokuapp.com/sessions/filter/recent/"${lowBound}"/"${highBound}"`
         )
           .then((res) => {
             setRequesting(false)
@@ -180,7 +180,7 @@ function App() {
     setRequesting(true)
     if (!recent) {
       Axios.get(
-        `http://localhost:3001/sessions/filter/"${lowBound}"/"${highBound}"`
+        `https://node-lifting-history.herokuapp.com/sessions/filter/"${lowBound}"/"${highBound}"`
       )
         .then((res) => {
           console.log(res);
@@ -191,7 +191,7 @@ function App() {
         .catch((err) => {console.log(err); setFailedReq(true)});
     } else if (recent) {
       Axios.get(
-        `http://localhost:3001/sessions/filter/recent/"${lowBound}"/"${highBound}"`
+        `https://node-lifting-history.herokuapp.com/sessions/filter/recent/"${lowBound}"/"${highBound}"`
       )
         .then((res) => {
           console.log(res);
@@ -207,7 +207,7 @@ function App() {
     e.preventDefault();
     if (filtered) {
       if (!recent) {
-        Axios.get(`http://localhost:3001/sessions/`)
+        Axios.get(`https://node-lifting-history.herokuapp.com/sessions/`)
           .then((res) => {
             console.log(res);
             setGet(res.data);
@@ -215,7 +215,7 @@ function App() {
           })
           .catch((err) => {console.log(err); setFailedReq(true)});
       } else if (recent) {
-        Axios.get(`http://localhost:3001/sessions/recent/`)
+        Axios.get(`https://node-lifting-history.herokuapp.com/sessions/recent/`)
           .then((res) => {
             console.log(res);
             setGet(res.data);
